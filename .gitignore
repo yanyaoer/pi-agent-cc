@@ -11,3 +11,6 @@ state/
 
 # Claude Code local (user-specific) settings — do NOT commit
 .claude/settings.local.json
+
+# Workspace-level LLM config — copy from pi-agent.config.example.json
+pi-agent.config.json

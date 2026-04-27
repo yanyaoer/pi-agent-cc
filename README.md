@@ -18,10 +18,19 @@ role-specific system prompt.
 
 Prereqs:
 - Node.js >= 20
-- `pi` CLI on PATH (run `pi --help` to check), logged in to at least one
-  provider via `pi --login`
 - A git repo as the working directory (plan/tasks are kept under
   `$CLAUDE_PLUGIN_DATA/state/<workspace-id>/`)
+- One provider logged in via `npx pi --login` (the `pi` CLI is bundled as a
+  dependency, so no global install is required)
+
+Install dependencies:
+```bash
+npm install
+```
+
+The plugin's `postinstall` hook runs `pi-companion init` automatically to
+create the state directory. `node_modules/.bin/pi` is used by the companion;
+you can override with `PI_BIN=/path/to/pi` if needed.
 
 ## Commands
 
@@ -67,6 +76,44 @@ git init -b main && echo "# demo" > README.md && git add -A && git commit -m ini
 # 5. Observe + wrap up
 /pi:status
 /pi:report
+```
+
+## Per-role LLM configuration
+
+Each role (planner / developer / tester / evaluator) can run on a different
+model. Configuration is resolved in this order (highest wins):
+
+1. Explicit `--model <id>` flag on the companion subcommand
+2. Environment variable `PI_AGENT_<ROLE>_MODEL` (e.g. `PI_AGENT_EVALUATOR_MODEL`)
+3. Workspace-level `pi-agent.config.json`
+4. Built-in default (evaluator defaults to `claude-opus-4-7`; others delegate
+   to pi's own default)
+
+**Config file** (copy `pi-agent.config.example.json` to `pi-agent.config.json`
+at your workspace root):
+
+```json
+{
+  "defaultModel": "claude-sonnet-4-6",
+  "roles": {
+    "planner":   { "model": "claude-sonnet-4-6" },
+    "developer": { "model": "claude-sonnet-4-6" },
+    "tester":    { "model": "claude-haiku-4-5" },
+    "evaluator": { "model": "claude-opus-4-7" }
+  }
+}
+```
+
+Each role entry may also set `tools` (csv or `"all"`) and
+`appendSystemPrompt` (absolute path to an extra prompt file) for advanced
+customisation.
+
+**Env overrides** (useful for CI or quick experiments):
+
+```bash
+PI_AGENT_DEFAULT_MODEL=claude-sonnet-4-6 \
+PI_AGENT_PLANNER_MODEL=claude-opus-4-7 \
+  /pi:plan "..."
 ```
 
 ## Architecture
