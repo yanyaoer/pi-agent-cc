@@ -29,6 +29,7 @@ import {
 // P2 business handlers (wired in during P4).
 import planHandler from "./lib/handlers/plan.mjs";
 import planConfirmHandler from "./lib/handlers/plan-confirm.mjs";
+import chatHandler from "./lib/handlers/chat.mjs";
 import developHandler from "./lib/handlers/develop.mjs";
 import testHandler from "./lib/handlers/test.mjs";
 import reviewHandler from "./lib/handlers/review.mjs";
@@ -173,6 +174,7 @@ const HANDLERS = {
   status: handleStatus,
   plan: planHandler,
   "plan-confirm": planConfirmHandler,
+  chat: chatHandler,
   develop: developHandler,
   test: testHandler,
   review: reviewHandler,
@@ -190,6 +192,7 @@ function usage() {
   return (
     `Usage: pi-agent-cc <subcommand> [args]\n` +
     `       pi-agent-cc "<free-form query>"   (implicit \`plan\` — multi-turn discussion)\n` +
+    `       pi-agent-cc chat                   (interactive REPL; same planner session)\n` +
     `       (alias: pi-companion <subcommand> [args])\n` +
     `\n` +
     `Subcommands: ${subcommands}\n` +

@@ -21,7 +21,7 @@ _pi_agent_cc_complete() {
         cword=$COMP_CWORD
     fi
 
-    local subs="init status plan plan-confirm develop test review evaluate orchestrate resume report approve cancel completion"
+    local subs="init status plan plan-confirm chat develop test review evaluate orchestrate resume report approve cancel completion"
 
     # Top-level subcommand position
     if [[ $cword -eq 1 ]]; then
@@ -57,6 +57,7 @@ _pi_agent_cc_complete() {
         orchestrate)  flags="--parallel --auto-approve --review --no-review" ;;
         resume)       flags="--role" ;;
         plan|evaluate) flags="--model" ;;
+        chat)         flags="--fresh" ;;
     esac
 
     # When typing a --flag, complete flags; otherwise (positional) offer

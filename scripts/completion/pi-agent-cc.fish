@@ -26,6 +26,7 @@ complete -c pi-agent-cc -n "__fish_use_subcommand" -a "init"         -d "Create 
 complete -c pi-agent-cc -n "__fish_use_subcommand" -a "status"       -d "Show plan and task status"
 complete -c pi-agent-cc -n "__fish_use_subcommand" -a "plan"         -d "Iterate/draft a plan with the planner"
 complete -c pi-agent-cc -n "__fish_use_subcommand" -a "plan-confirm" -d "Freeze the current draft plan"
+complete -c pi-agent-cc -n "__fish_use_subcommand" -a "chat"         -d "Interactive REPL with the planner"
 complete -c pi-agent-cc -n "__fish_use_subcommand" -a "develop"      -d "Dispatch the developer on a task"
 complete -c pi-agent-cc -n "__fish_use_subcommand" -a "test"         -d "Run the tester on a task"
 complete -c pi-agent-cc -n "__fish_use_subcommand" -a "review"       -d "Run the adversarial reviewer on a task"
@@ -67,6 +68,9 @@ complete -c pi-agent-cc -n "__fish_seen_subcommand_from evaluate" -l model -d "O
 
 # plan -----------------------------------------------------------------------
 complete -c pi-agent-cc -n "__fish_seen_subcommand_from plan" -l model -d "Override planner model"
+
+# chat -----------------------------------------------------------------------
+complete -c pi-agent-cc -n "__fish_seen_subcommand_from chat" -l fresh -d "Wipe the planner session first"
 
 # completion -----------------------------------------------------------------
 complete -c pi-agent-cc -n "__fish_seen_subcommand_from completion" -xa "fish bash zsh"

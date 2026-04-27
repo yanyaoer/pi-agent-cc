@@ -73,7 +73,38 @@ pi-agent-cc status
 pi-agent-cc report
 ```
 
-### Implicit `plan` — multi-turn discussion
+### Interactive chat mode
+
+```bash
+pi-agent-cc chat                  # enter REPL; reuses existing planner session
+pi-agent-cc chat --fresh          # wipe the planner session first
+```
+
+Inside the REPL:
+
+```
+pi> 我想做一个在 sandbox 里跑的长驻 coding agent
+<planner replies in discussion mode, asks a couple of targeted questions>
+pi> 给内部开发者用，输入是 Linear ticket id，输出是 PR
+<planner now has enough context → emits plan JSON>
+pi> /confirm
+<plan frozen; tasks/*.json created>
+pi> /status
+<markdown task table>
+pi> /quit
+```
+
+Meta commands:
+
+| Command | Effect |
+|---|---|
+| `/confirm` | freeze the current draft plan (same as `plan-confirm`) |
+| `/status` | render the task table in-process |
+| `/help` | list meta commands |
+| `/quit` · `/q` · `Ctrl-D` | exit |
+| `Ctrl-C` | cancel an in-flight turn (press twice to exit) |
+
+### One-shot planner — implicit `plan`
 
 Anything that doesn't look like a subcommand (contains spaces, CJK
 characters, leading `--`, etc.) is forwarded to the planner
@@ -82,12 +113,9 @@ automatically:
 ```bash
 pi-agent-cc '我想做一个 X，先帮我想想项目目标'
 # planner replies in discussion mode, asks 1-3 targeted questions
-#   → goal? audience? constraints?
 
 pi-agent-cc '给程序员用的 CLI，离线也能跑，Go 语言'
-# planner still has the prior session open via --resume,
-# so the follow-up sees the full history. Once enough context is
-# gathered, the planner switches to plan mode and emits task JSON.
+# same planner session via --session, so the follow-up sees full history
 
 pi-agent-cc plan-confirm        # freeze once you're happy
 pi-agent-cc orchestrate
@@ -97,7 +125,8 @@ The planner distinguishes two modes per turn based on what it has to
 work with: **discussion** (no JSON, asks about goal/audience/
 constraints) and **plan** (JSON task list). Sessions are preserved
 across turns, so you can iterate as many rounds as you need without
-losing context.
+losing context. For long conversations `pi-agent-cc chat` is usually
+more ergonomic than re-invoking the binary each turn.
 
 Everything the slash commands do is just a forwarded `pi-agent-cc <sub>`
 call, so running it externally is fully supported — you just lose the

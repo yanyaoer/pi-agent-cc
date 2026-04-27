@@ -29,6 +29,7 @@ _pi_agent_cc() {
                 'status:Show plan and task status'
                 'plan:Iterate or draft a plan'
                 'plan-confirm:Freeze the current draft plan'
+                'chat:Interactive REPL with the planner'
                 'develop:Dispatch the developer on a task'
                 'test:Run the tester on a task'
                 'review:Run the adversarial reviewer on a task'
@@ -76,6 +77,9 @@ _pi_agent_cc() {
                     ;;
                 plan|evaluate)
                     _arguments '--model[Override role model]:model:'
+                    ;;
+                chat)
+                    _arguments '--fresh[Wipe the planner session first]'
                     ;;
                 completion)
                     _arguments '1:shell:(fish bash zsh)'

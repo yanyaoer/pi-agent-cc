@@ -77,18 +77,24 @@ export default async function handlePlan(argv) {
   // keep iterating with /pi:plan <followup>.
   const jsonBlock = extractLastJsonBlock(rawText);
   if (!jsonBlock) {
-    writeJsonLine({
-      event: 'plan.discussion',
-      sessionPath: plannerSession,
-      chars: rawText.length,
-    });
+    const quiet = process.env.PI_AGENT_QUIET === '1';
+    if (!quiet) {
+      writeJsonLine({
+        event: 'plan.discussion',
+        sessionPath: plannerSession,
+        chars: rawText.length,
+      });
+    }
     // Echo the planner's reply as-is so the coordinator relays it verbatim.
     process.stdout.write(`\n${rawText.trim()}\n\n`);
-    process.stdout.write(
-      `_(planner replied in discussion mode — no plan JSON was emitted. ` +
-      `Continue the conversation with \`pi-agent-cc "<reply>"\` (shell) or ` +
-      `\`/pi:plan <reply>\` (in Claude Code); the planner session is preserved.)_\n`,
-    );
+    if (!quiet) {
+      process.stdout.write(
+        `_(planner replied in discussion mode — no plan JSON was emitted. ` +
+        `Continue the conversation with \`pi-agent-cc "<reply>"\` (shell), ` +
+        `\`pi-agent-cc chat\` (interactive REPL), or ` +
+        `\`/pi:plan <reply>\` (in Claude Code); the planner session is preserved.)_\n`,
+      );
+    }
     return;
   }
 
