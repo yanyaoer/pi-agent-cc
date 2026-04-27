@@ -189,6 +189,7 @@ function usage() {
   const subcommands = Object.keys(HANDLERS).join(", ");
   return (
     `Usage: pi-agent-cc <subcommand> [args]\n` +
+    `       pi-agent-cc "<free-form query>"   (implicit \`plan\` — multi-turn discussion)\n` +
     `       (alias: pi-companion <subcommand> [args])\n` +
     `\n` +
     `Subcommands: ${subcommands}\n` +
@@ -204,23 +205,43 @@ function usage() {
   );
 }
 
+// A token "looks like" a subcommand if it's a short lowercase identifier
+// (kebab-case, ≤20 chars). Anything else — sentences, quoted prose, Chinese
+// characters, leading --flags — is treated as a free-form plan/discussion
+// query. This lets users type:
+//   pi-agent-cc "build a login page"
+//   pi-agent-cc '我想给这个项目起个名字'
+// without having to remember the `plan` subcommand.
+const SUBCOMMAND_SHAPE = /^[a-z][a-z0-9-]{0,19}$/;
+
 async function main() {
   const [, , subcommand, ...rest] = process.argv;
   if (!subcommand || subcommand === "--help" || subcommand === "-h") {
     process.stdout.write(usage());
     process.exit(0);
   }
-  const handler = HANDLERS[subcommand];
+
+  let effectiveSubcommand = subcommand;
+  let effectiveArgs = rest;
+  let handler = HANDLERS[subcommand];
   if (!handler) {
-    process.stderr.write(`unknown subcommand: ${subcommand}\n\n${usage()}`);
-    process.exit(2);
+    if (SUBCOMMAND_SHAPE.test(subcommand)) {
+      // Looks like a typo of a real subcommand — surface the error.
+      process.stderr.write(`unknown subcommand: ${subcommand}\n\n${usage()}`);
+      process.exit(2);
+    }
+    // Free-form text → route to planner for discussion / planning.
+    effectiveSubcommand = "plan";
+    effectiveArgs = process.argv.slice(2);
+    handler = HANDLERS.plan;
   }
+
   try {
-    await handler(rest);
+    await handler(effectiveArgs);
   } catch (err) {
     const message = err?.message ?? String(err);
     const binName = (process.argv[1] && path.basename(process.argv[1])) || "pi-agent-cc";
-    process.stderr.write(`${binName} ${subcommand}: ${message}\n`);
+    process.stderr.write(`${binName} ${effectiveSubcommand}: ${message}\n`);
     if (process.env.PI_COMPANION_DEBUG) {
       process.stderr.write(`${err?.stack ?? ""}\n`);
     }

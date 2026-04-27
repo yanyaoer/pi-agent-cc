@@ -73,6 +73,32 @@ pi-agent-cc status
 pi-agent-cc report
 ```
 
+### Implicit `plan` — multi-turn discussion
+
+Anything that doesn't look like a subcommand (contains spaces, CJK
+characters, leading `--`, etc.) is forwarded to the planner
+automatically:
+
+```bash
+pi-agent-cc '我想做一个 X，先帮我想想项目目标'
+# planner replies in discussion mode, asks 1-3 targeted questions
+#   → goal? audience? constraints?
+
+pi-agent-cc '给程序员用的 CLI，离线也能跑，Go 语言'
+# planner still has the prior session open via --resume,
+# so the follow-up sees the full history. Once enough context is
+# gathered, the planner switches to plan mode and emits task JSON.
+
+pi-agent-cc plan-confirm        # freeze once you're happy
+pi-agent-cc orchestrate
+```
+
+The planner distinguishes two modes per turn based on what it has to
+work with: **discussion** (no JSON, asks about goal/audience/
+constraints) and **plan** (JSON task list). Sessions are preserved
+across turns, so you can iterate as many rounds as you need without
+losing context.
+
 Everything the slash commands do is just a forwarded `pi-agent-cc <sub>`
 call, so running it externally is fully supported — you just lose the
 Claude Code rendering layer.

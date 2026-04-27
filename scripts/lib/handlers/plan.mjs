@@ -6,7 +6,7 @@
 
 import fs from 'node:fs';
 import { loadPrompt } from '../prompts.mjs';
-import { parseAndValidate } from '../schema.mjs';
+import { parseAndValidate, extractLastJsonBlock } from '../schema.mjs';
 import {
   parseArgs,
   nowIso,
@@ -43,12 +43,35 @@ export default async function handlePlan(argv) {
   });
 
   const text0 = result?.lastMessage?.text || result?.lastMessage || '';
-  const parsed = parseAndValidate(typeof text0 === 'string' ? text0 : String(text0), 'plan');
+  const rawText = typeof text0 === 'string' ? text0 : String(text0);
+
+  // Two-mode planner: if the reply has no trailing JSON block, treat it as
+  // a discussion turn (naming question, clarification, exploratory dialog).
+  // We echo the reply back and keep the planner session open so the user can
+  // keep iterating with /pi:plan <followup>.
+  const jsonBlock = extractLastJsonBlock(rawText);
+  if (!jsonBlock) {
+    writeJsonLine({
+      event: 'plan.discussion',
+      sessionPath: plannerSession,
+      chars: rawText.length,
+    });
+    // Echo the planner's reply as-is so the coordinator relays it verbatim.
+    process.stdout.write(`\n${rawText.trim()}\n\n`);
+    process.stdout.write(
+      `_(planner replied in discussion mode — no plan JSON was emitted. ` +
+      `Continue the conversation with \`pi-agent-cc "<reply>"\` (shell) or ` +
+      `\`/pi:plan <reply>\` (in Claude Code); the planner session is preserved.)_\n`,
+    );
+    return;
+  }
+
+  const parsed = parseAndValidate(rawText, 'plan');
   if (!parsed.ok) {
     writeJsonLine({
       event: 'plan.invalid',
       errors: parsed.errors,
-      raw: typeof text0 === 'string' ? text0.slice(-2000) : '',
+      raw: rawText.slice(-2000),
     });
     throw new Error(`planner output failed plan.schema validation:\n  ${parsed.errors.join('\n  ')}`);
   }
