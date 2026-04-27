@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EvalReport",
+  "type": "object",
+  "required": ["score", "verdict"],
+  "properties": {
+    "score": { "type": "number", "minimum": 0, "maximum": 100 },
+    "verdict": {
+      "type": "string",
+      "enum": ["ACCEPT", "REWORK", "REJECT"]
+    },
+    "dimensions": {
+      "type": "object",
+      "properties": {
+        "functional": { "type": "number", "minimum": 0, "maximum": 100 },
+        "quality": { "type": "number", "minimum": 0, "maximum": 100 },
+        "coverage": { "type": "number", "minimum": 0, "maximum": 100 }
+      },
+      "additionalProperties": true
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "taskId": { "type": "string" },
+          "severity": { "type": "string" },
+          "detail": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "recommendations": { "type": "string" }
+  },
+  "additionalProperties": true
+}
