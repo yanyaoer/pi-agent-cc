@@ -42,8 +42,34 @@ export default async function handlePlan(argv) {
     model: await resolveRoleModel('planner', opts.model),
   });
 
-  const text0 = result?.lastMessage?.text || result?.lastMessage || '';
-  const rawText = typeof text0 === 'string' ? text0 : String(text0);
+  // Prefer lastMessage.text when the runner captured it; otherwise scan the
+  // event stream for the most recent assistant `message_end` and extract
+  // text blocks directly. This protects us from corner cases where the pi
+  // stream ends with a tool / user message or an assistant turn that
+  // contained only thinking blocks before the text arrived.
+  function extractAssistantTextFromEvents(events) {
+    for (let i = events.length - 1; i >= 0; i--) {
+      const ev = events[i];
+      if (ev?.type === 'message_end' && ev?.message?.role === 'assistant') {
+        const content = ev.message.content;
+        if (typeof content === 'string') return content;
+        if (Array.isArray(content)) {
+          const parts = content
+            .filter((b) => b && b.type === 'text' && typeof b.text === 'string')
+            .map((b) => b.text);
+          if (parts.length) return parts.join('');
+        }
+      }
+    }
+    return '';
+  }
+  let rawText = '';
+  if (typeof result?.lastMessage?.text === 'string' && result.lastMessage.text) {
+    rawText = result.lastMessage.text;
+  } else if (Array.isArray(result?.events)) {
+    rawText = extractAssistantTextFromEvents(result.events);
+  }
+  rawText = rawText || '';
 
   // Two-mode planner: if the reply has no trailing JSON block, treat it as
   // a discussion turn (naming question, clarification, exploratory dialog).

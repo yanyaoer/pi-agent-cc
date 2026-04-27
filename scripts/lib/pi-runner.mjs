@@ -5,7 +5,8 @@
 // pi-mono/packages/coding-agent/src/main.ts L149/L239/L496):
 //
 //   pi --mode json -p
-//      [--session <absolute.jsonl> | --resume <absolute.jsonl>]
+//      [--session <absolute.jsonl>]  (same flag for new and resume; pi opens
+//                                      the file if it exists, creates it otherwise)
 //      [--append-system-prompt <path>]  (may be passed multiple times)
 //      [--tools <csv-or-"all">]
 //      [--model <id>]
@@ -142,7 +143,14 @@ export function buildPiArgs({
 
   const args = ["--mode", "json", "-p"];
   if (sessionPath) {
-    args.push(resume ? "--resume" : "--session", sessionPath);
+    // pi's `--session <path>` opens the file when it exists and creates it
+    // when it doesn't, so the same flag covers first-run and resume. The
+    // `--resume` flag in pi is a boolean that triggers an interactive
+    // session picker — never what we want from a subprocess. We keep the
+    // `resume` parameter in the API surface for semantic clarity and for
+    // future divergence, but it's intentionally not mapped to `--resume`.
+    args.push("--session", sessionPath);
+    void resume;
   }
   if (systemPromptPath) {
     args.push("--append-system-prompt", systemPromptPath);
@@ -252,13 +260,19 @@ export async function runPi(options = {}) {
     if (event.type === "message_end" && event.message) {
       const msg = event.message;
       const text = extractText(msg);
-      result.lastMessage = {
-        role: msg.role,
-        text,
-        parsedJson: null,
-        raw: msg,
-      };
+      // Track only assistant replies so tool results / user echo messages
+      // later in the stream don't clobber the real LLM reply. We also skip
+      // assistant messages with empty text (pure tool_use / thinking turns)
+      // so `lastMessage` is guaranteed to carry the last user-facing text.
       if (msg.role === "assistant") {
+        if (text) {
+          result.lastMessage = {
+            role: msg.role,
+            text,
+            parsedJson: null,
+            raw: msg,
+          };
+        }
         result.usage.turns += 1;
         const usage = msg.usage;
         if (usage) {
