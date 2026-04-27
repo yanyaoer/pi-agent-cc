@@ -29,6 +29,7 @@ import planHandler from "./lib/handlers/plan.mjs";
 import planConfirmHandler from "./lib/handlers/plan-confirm.mjs";
 import developHandler from "./lib/handlers/develop.mjs";
 import testHandler from "./lib/handlers/test.mjs";
+import reviewHandler from "./lib/handlers/review.mjs";
 import evaluateHandler from "./lib/handlers/evaluate.mjs";
 import orchestrateHandler from "./lib/handlers/orchestrate.mjs";
 import resumeHandler from "./lib/handlers/resume.mjs";
@@ -146,6 +147,7 @@ const HANDLERS = {
   "plan-confirm": planConfirmHandler,
   develop: developHandler,
   test: testHandler,
+  review: reviewHandler,
   evaluate: evaluateHandler,
   orchestrate: orchestrateHandler,
   resume: resumeHandler,

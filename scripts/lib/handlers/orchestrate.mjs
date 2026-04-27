@@ -3,17 +3,27 @@
 
 import handleDevelop from './develop.mjs';
 import handleTest from './test.mjs';
+import handleReview from './review.mjs';
 import handleEvaluate from './evaluate.mjs';
 import { getReadyTasks, findCycles } from '../task-graph.mjs';
+import { getOrchestrationConfig } from '../config.mjs';
 import {
   parseArgs,
   nowIso,
   getStateDir,
   stateLib,
+  workspaceLib,
   worktreeLib,
   loadLatestTestReport,
+  loadReports,
   writeJsonLine,
 } from './_shared.mjs';
+
+async function latestReviewReport(stateDir, taskId) {
+  const all = await loadReports(stateDir, taskId);
+  const reviews = all.filter((r) => r.kind === 'review');
+  return reviews.length ? reviews[reviews.length - 1] : null;
+}
 
 const SLEEP_MS = 500;
 
@@ -25,6 +35,10 @@ export default async function handleOrchestrate(argv) {
   const { opts } = parseArgs(argv);
   const parallel = Math.max(1, Number(opts.parallel) || 4);
   const autoApprove = !!opts['auto-approve'];
+  const ws = await workspaceLib();
+  const orch = getOrchestrationConfig(ws.resolveWorkspaceRoot());
+  // CLI override: --no-review disables; --review forces on.
+  const reviewEnabled = opts['no-review'] ? false : (opts.review === true ? true : !!orch.review?.enabled);
 
   const { loadState, saveState, listTasks, loadTask, saveTask, appendHistory } = await stateLib();
   const state = (await loadState()) || {};
@@ -42,7 +56,12 @@ export default async function handleOrchestrate(argv) {
     throw new Error(`dependency cycle detected in plan: ${cyc.join(' -> ')}`);
   }
 
-  writeJsonLine({ event: 'orchestrate.start', parallel, taskCount: initialTasks.length });
+  writeJsonLine({
+    event: 'orchestrate.start',
+    parallel,
+    taskCount: initialTasks.length,
+    reviewEnabled,
+  });
 
   const inFlight = new Map(); // taskId -> Promise
 
@@ -160,34 +179,68 @@ export default async function handleOrchestrate(argv) {
 
       const latest = await loadLatestTestReport(stateDir, taskId);
       const verdict = latest?.body?.verdict;
-      if (verdict === 'PASS') {
-        // Merge and mark done.
-        const { mergeWorktree, removeWorktree } = await worktreeLib();
-        let merge;
-        try {
-          merge = await mergeWorktree(taskId, /* targetBranch */ 'main');
-        } catch (err) {
-          merge = { ok: false, error: err.message };
-        }
-        const current = await loadTask(taskId);
-        if (merge && merge.ok !== false) {
-          current.status = 'done';
-          await saveTask(current);
-          await appendHistory(taskId, { ts: nowIso(), event: 'merged' });
-          try { await removeWorktree(taskId, { force: false }); } catch { /* best effort */ }
-          writeJsonLine({ event: 'task.done', taskId });
-        } else {
-          current.status = 'blocked';
-          await saveTask(current);
-          await appendHistory(taskId, { ts: nowIso(), event: 'merge.failed', error: merge?.error });
-          writeJsonLine({ event: 'task.blocked', taskId, reason: 'merge-conflict', error: merge?.error });
-        }
-        return;
+      if (verdict !== 'PASS') {
+        // FAIL → loop back for another iteration.
+        writeJsonLine({ event: 'task.retry', taskId, attempts: freshTask.attempts || 0, stage: 'test' });
+        // attempts counter is bumped inside handleTest on FAIL.
+        continue;
       }
 
-      // FAIL → loop back for another iteration.
-      writeJsonLine({ event: 'task.retry', taskId, attempts: freshTask.attempts || 0 });
-      // attempts counter is bumped inside handleTest on FAIL.
+      // Optional review stage — adversarial reviewer gate before merge.
+      if (reviewEnabled) {
+        const taskForReview = await loadTask(taskId);
+        const hasReviewSession = !!taskForReview.sessions?.reviewer;
+        const reviewArgs = hasReviewSession
+          ? ['--task', taskId, '--resume']
+          : ['--task', taskId];
+        try {
+          await handleReview(reviewArgs);
+        } catch (err) {
+          writeJsonLine({
+            event: 'task.retry',
+            taskId,
+            attempts: (await loadTask(taskId)).attempts || 0,
+            stage: 'review',
+            error: err.message,
+          });
+          continue; // reviewer threw (e.g. schema invalid) → retry via dev resume
+        }
+        const rev = await latestReviewReport(stateDir, taskId);
+        if (rev?.body?.verdict !== 'approve') {
+          writeJsonLine({
+            event: 'task.retry',
+            taskId,
+            attempts: (await loadTask(taskId)).attempts || 0,
+            stage: 'review',
+            findingCount: (rev?.body?.findings || []).length,
+          });
+          // review.mjs already bumped attempts and flipped status to 'developing'.
+          continue;
+        }
+      }
+
+      // Merge and mark done.
+      const { mergeWorktree, removeWorktree } = await worktreeLib();
+      let merge;
+      try {
+        merge = await mergeWorktree(taskId, /* targetBranch */ 'main');
+      } catch (err) {
+        merge = { ok: false, error: err.message };
+      }
+      const current = await loadTask(taskId);
+      if (merge && merge.ok !== false) {
+        current.status = 'done';
+        await saveTask(current);
+        await appendHistory(taskId, { ts: nowIso(), event: 'merged' });
+        try { await removeWorktree(taskId, { force: false }); } catch { /* best effort */ }
+        writeJsonLine({ event: 'task.done', taskId });
+      } else {
+        current.status = 'blocked';
+        await saveTask(current);
+        await appendHistory(taskId, { ts: nowIso(), event: 'merge.failed', error: merge?.error });
+        writeJsonLine({ event: 'task.blocked', taskId, reason: 'merge-conflict', error: merge?.error });
+      }
+      return;
     }
   }
 }
