@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node scripts/pi-companion.mjs:*)",
+      "Bash(node scripts/session-lifecycle-hook.mjs:*)",
+      "Bash(git worktree:*)",
+      "Bash(git branch:*)",
+      "Bash(git merge:*)",
+      "Bash(git checkout:*)",
+      "Bash(git diff:*)",
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(pi:*)"
+    ]
+  }
+}
