@@ -7,7 +7,12 @@
     "pi-companion": "./scripts/pi-companion.mjs"
   },
   "scripts": {
-    "test:cli": "node scripts/pi-companion.mjs init && node scripts/pi-companion.mjs status --json"
+    "postinstall": "node scripts/pi-companion.mjs init 2>/dev/null || true",
+    "test:cli": "node scripts/pi-companion.mjs init && node scripts/pi-companion.mjs status --json",
+    "pi:version": "node -e \"import('./scripts/lib/pi-runner.mjs').then(m => console.log(m.resolvePiBin()))\""
+  },
+  "dependencies": {
+    "@mariozechner/pi-coding-agent": "^0.70.2"
   },
   "engines": {
     "node": ">=20"

@@ -19,6 +19,7 @@
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 /**
  * @typedef {Object} RunPiResult
@@ -31,7 +32,20 @@ import path from "node:path";
  * @property {boolean} aborted
  */
 
-const DEFAULT_PI_BIN = process.env.PI_BIN || "pi";
+// Resolution order for the `pi` binary:
+//   1. explicit `piBin` option to runPi()
+//   2. PI_BIN env
+//   3. plugin-local node_modules/.bin/pi (installed via dependencies)
+//   4. bare "pi" on $PATH
+export function resolvePiBin() {
+  if (process.env.PI_BIN) return process.env.PI_BIN;
+  const pluginRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+  const local = path.join(pluginRoot, "node_modules", ".bin", "pi");
+  if (fs.existsSync(local)) return local;
+  return "pi";
+}
+
+const DEFAULT_PI_BIN = resolvePiBin();
 
 function assertAbsolute(p, label) {
   if (typeof p !== "string" || !p) {
