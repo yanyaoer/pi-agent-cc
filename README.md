@@ -47,13 +47,63 @@ you can override with `PI_BIN=/path/to/pi` if needed.
 | `/pi:approve <taskId> <reason>` | Force-approve a task (skip evaluator gate). Coordinator override. |
 | `/pi:cancel [taskId]` | Cancel a running task (or all running) by SIGTERM to the `pi` subprocess. |
 
-The companion CLI is usable directly too:
+## Use outside of Claude Code
 
-```
-node scripts/pi-companion.mjs init
+`pi-agent-cc` is a plain Node CLI and can drive the full workflow from any
+shell, no Claude Code session required.
+
+```bash
+# Expose the binary globally (one-off):
+npm link                # from the repo root, creates `pi-agent-cc` and
+                        # `pi-companion` on PATH
+
+# Or run without linking:
 node scripts/pi-companion.mjs status --json
-node scripts/pi-companion.mjs plan "build a login page"
 ```
+
+Then the whole surface is available directly:
+
+```bash
+pi-agent-cc init
+pi-agent-cc plan 'build a login page with SSO'
+pi-agent-cc plan 'split HTML and CSS into two tasks'
+pi-agent-cc plan-confirm
+pi-agent-cc orchestrate --parallel 2
+pi-agent-cc status
+pi-agent-cc report
+```
+
+Everything the slash commands do is just a forwarded `pi-agent-cc <sub>`
+call, so running it externally is fully supported — you just lose the
+Claude Code rendering layer.
+
+### Shell completion
+
+The binary can emit its own completion script for `fish`, `bash`, or `zsh`:
+
+```bash
+# fish
+pi-agent-cc completion fish > ~/.config/fish/completions/pi-agent-cc.fish
+
+# bash (requires bash-completion; path may differ on Linux)
+pi-agent-cc completion bash | sudo tee /usr/local/etc/bash_completion.d/pi-agent-cc
+
+# zsh
+pi-agent-cc completion zsh > "${fpath[1]}/_pi-agent-cc"
+autoload -U compinit && compinit
+```
+
+Or eval inline for a throwaway shell:
+
+```bash
+source <(pi-agent-cc completion bash)   # bash
+pi-agent-cc completion fish | source    # fish
+```
+
+Completion covers: all subcommands, per-subcommand flags, `--role
+developer|tester`, and **live task-id lookup** for `--task`, `status`,
+`approve`, `cancel`, `resume` — driven by the current plan's
+`status --json` output (requires `jq` on PATH for the dynamic suggestions).
 
 ## 5-minute quickstart
 
