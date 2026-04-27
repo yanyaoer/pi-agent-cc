@@ -13,6 +13,7 @@ import {
   getStateDir,
   stateLib,
   runnerLib,
+  resolveRoleModel,
   sessionPath,
   loadPlan,
   savePlan,
@@ -38,7 +39,7 @@ export default async function handlePlan(argv) {
     resume: exists,
     prompt: text,
     cwd: process.cwd(),
-    model: opts.model,
+    model: await resolveRoleModel('planner', opts.model),
   });
 
   const text0 = result?.lastMessage?.text || result?.lastMessage || '';

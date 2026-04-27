@@ -12,6 +12,7 @@ import {
   stateLib,
   workspaceLib,
   runnerLib,
+  resolveRoleModel,
   sessionPath,
   evalRunPath,
   loadPlan,
@@ -88,7 +89,7 @@ export default async function handleEvaluate(argv) {
     resume: false,
     prompt,
     cwd: workspaceRoot,
-    model: opts.model || 'claude-opus-4-7',
+    model: await resolveRoleModel('evaluator', opts.model),
   });
 
   const raw = typeof result?.lastMessage?.text === 'string'

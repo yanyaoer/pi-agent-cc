@@ -71,6 +71,32 @@ export async function renderLib() {
   return await import('../render.mjs');
 }
 
+export async function configLib() {
+  return await import('../config.mjs');
+}
+
+/**
+ * Resolve the effective model for a role, honoring CLI override →
+ * env override → config file → role default → pi's own default.
+ */
+export async function resolveRoleModel(role, override) {
+  const cfg = await configLib();
+  const ws = await workspaceLib();
+  const workspaceRoot = ws.resolveWorkspaceRoot();
+  return cfg.getRoleModel(workspaceRoot, role, override);
+}
+
+/**
+ * Resolve the full role config (model + tools + appendSystemPrompt).
+ * Callers typically still pass explicit `tools` / prompt paths that match
+ * the role's intent; this is provided for advanced overrides.
+ */
+export async function resolveRoleConfig(role) {
+  const cfg = await configLib();
+  const ws = await workspaceLib();
+  return cfg.getRoleConfig(ws.resolveWorkspaceRoot(), role);
+}
+
 export function sessionPath(stateDir, role, taskId) {
   const base = taskId ? `${role}-${taskId}.jsonl` : `${role}.jsonl`;
   return path.join(stateDir, 'sessions', base);

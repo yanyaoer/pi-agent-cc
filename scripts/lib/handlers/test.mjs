@@ -12,6 +12,7 @@ import {
   getStateDir,
   stateLib,
   runnerLib,
+  resolveRoleModel,
   sessionPath,
   loadLatestTestReport,
   saveReport,
@@ -61,7 +62,7 @@ export default async function handleTest(argv) {
     resume,
     prompt,
     cwd: task.worktree.path,
-    model: opts.model,
+    model: await resolveRoleModel('tester', opts.model),
   });
 
   const raw = typeof result?.lastMessage?.text === 'string'

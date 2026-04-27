@@ -8,6 +8,7 @@ import {
   getStateDir,
   stateLib,
   runnerLib,
+  resolveRoleModel,
   worktreeLib,
   sessionPath,
   loadLatestTestReport,
@@ -60,7 +61,7 @@ export default async function handleDevelop(argv) {
     resume,
     prompt,
     cwd: task.worktree?.path || process.cwd(),
-    model: opts.model,
+    model: await resolveRoleModel('developer', opts.model),
   });
 
   const summaryRaw = typeof result?.lastMessage?.text === 'string'

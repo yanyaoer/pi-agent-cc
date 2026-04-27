@@ -1,0 +1,11 @@
+{
+  "$schema": "https://example.invalid/pi-agent.config.schema.json",
+  "_comment": "Copy to pi-agent.config.json at your workspace root. Unset fields fall through to pi CLI's own default.",
+  "defaultModel": "claude-sonnet-4-6",
+  "roles": {
+    "planner":   { "model": "claude-sonnet-4-6" },
+    "developer": { "model": "claude-sonnet-4-6" },
+    "tester":    { "model": "claude-haiku-4-5" },
+    "evaluator": { "model": "claude-opus-4-7" }
+  }
+}
