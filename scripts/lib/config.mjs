@@ -26,7 +26,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-export const ROLES = ["planner", "developer", "tester", "evaluator"];
+export const ROLES = ["planner", "developer", "tester", "reviewer", "evaluator"];
 
 const DEFAULT_CONFIG = {
   defaultModel: undefined,
@@ -34,7 +34,11 @@ const DEFAULT_CONFIG = {
     planner:   {},
     developer: {},
     tester:    {},
+    reviewer:  {},   // adversarial review; inherits defaultModel
     evaluator: { model: "claude-opus-4-7" },
+  },
+  orchestration: {
+    review: { enabled: true, maxContextFiles: 25 },
   },
 };
 
@@ -54,6 +58,9 @@ export function loadConfig(workspaceRoot) {
   const merged = {
     defaultModel: DEFAULT_CONFIG.defaultModel,
     roles: {},
+    orchestration: {
+      review: { ...DEFAULT_CONFIG.orchestration.review },
+    },
     source: {},
   };
   for (const role of ROLES) {
@@ -72,6 +79,14 @@ export function loadConfig(workspaceRoot) {
             if (raw.roles[role] && typeof raw.roles[role] === "object") {
               merged.roles[role] = { ...merged.roles[role], ...raw.roles[role] };
             }
+          }
+        }
+        if (raw.orchestration && typeof raw.orchestration === "object") {
+          if (raw.orchestration.review && typeof raw.orchestration.review === "object") {
+            merged.orchestration.review = {
+              ...merged.orchestration.review,
+              ...raw.orchestration.review,
+            };
           }
         }
         merged.source.file = configFile;
@@ -93,6 +108,10 @@ export function loadConfig(workspaceRoot) {
     if (m) merged.roles[role].model = m;
     if (t) merged.roles[role].tools = t;
     if (s) merged.roles[role].appendSystemPrompt = s;
+  }
+  if (process.env.PI_AGENT_REVIEW_ENABLED !== undefined) {
+    const v = process.env.PI_AGENT_REVIEW_ENABLED.toLowerCase();
+    merged.orchestration.review.enabled = v === "1" || v === "true" || v === "yes";
   }
 
   cached = merged;
@@ -126,6 +145,16 @@ export function getRoleConfig(workspaceRoot, role) {
   return {
     ...cfg.roles[role],
     model: cfg.roles[role].model || cfg.defaultModel || undefined,
+  };
+}
+
+/**
+ * Resolve orchestration-level toggles (currently just the review stage).
+ */
+export function getOrchestrationConfig(workspaceRoot) {
+  const cfg = loadConfig(workspaceRoot);
+  return {
+    review: { ...cfg.orchestration.review },
   };
 }
 

@@ -21,6 +21,7 @@ const SCHEMAS_DIR = path.resolve(__dirname, '..', '..', 'schemas');
 const KNOWN_SCHEMAS = {
   plan: 'plan.schema.json',
   'test-report': 'test-report.schema.json',
+  'review-report': 'review-report.schema.json',
   'eval-report': 'eval-report.schema.json',
 };
 
@@ -174,7 +175,7 @@ export function extractLastJsonBlock(text) {
  * validate it against the named schema.
  *
  * @param {string} text
- * @param {'plan'|'test-report'|'eval-report'} schemaName
+ * @param {'plan'|'test-report'|'review-report'|'eval-report'} schemaName
  * @returns {{ ok: true, data: any } | { ok: false, errors: string[] }}
  */
 export function parseAndValidate(text, schemaName) {
