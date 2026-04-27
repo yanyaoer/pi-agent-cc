@@ -1,0 +1,6 @@
+{
+  "name": "pi-agent",
+  "version": "0.1.0",
+  "description": "Multi-agent handoff, task decomposition, and QA loop built on pi-mono.",
+  "author": { "name": "pi-agent-cc" }
+}

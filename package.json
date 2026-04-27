@@ -1,0 +1,16 @@
+{
+  "name": "pi-agent-cc",
+  "version": "0.1.0",
+  "description": "Claude Code plugin: multi-agent handoff orchestrator built on pi-mono.",
+  "type": "module",
+  "bin": {
+    "pi-companion": "./scripts/pi-companion.mjs"
+  },
+  "scripts": {
+    "test:cli": "node scripts/pi-companion.mjs init && node scripts/pi-companion.mjs status --json"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}

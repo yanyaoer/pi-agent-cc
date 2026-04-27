@@ -1,0 +1,141 @@
+{
+  "meta": {
+    "type": "task",
+    "id": "260427-pi-agent-cc",
+    "created_at": "2026-04-27",
+    "updated_at": "2026-04-27",
+    "status": "active",
+    "scope": {
+      "modules": [
+        "plugin-manifest",
+        "companion-cli",
+        "pi-runner",
+        "worktree-manager",
+        "state-persistence",
+        "handoff-protocol",
+        "eval-runner",
+        "subagents",
+        "slash-commands",
+        "hooks"
+      ],
+      "functions": [
+        "orchestrate",
+        "develop",
+        "test",
+        "evaluate",
+        "plan",
+        "plan-confirm",
+        "status",
+        "resume",
+        "report",
+        "approve",
+        "cancel"
+      ],
+      "files": [
+        "plugins/pi-agent/scripts/**",
+        "plugins/pi-agent/agents/*.md",
+        "plugins/pi-agent/commands/*.md",
+        "plugins/pi-agent/schemas/*.json",
+        "plugins/pi-agent/prompts/*.md",
+        "plugins/pi-agent/hooks/hooks.json",
+        ".claude-plugin/plugin.json",
+        "package.json"
+      ]
+    },
+    "keywords": [
+      "claude-code-plugin",
+      "pi-mono",
+      "pi-cli",
+      "multi-agent",
+      "handoff",
+      "git-worktree",
+      "subagent-forwarder",
+      "session-jsonl",
+      "resume",
+      "evaluator",
+      "eval-runner",
+      "planner"
+    ],
+    "relevance": {
+      "must_read": [
+        "any change to companion CLI subcommand contract",
+        "any change to session-file naming convention",
+        "any change to worktree branch naming convention",
+        "any change to plan.schema/test-report.schema/eval-report.schema",
+        "any change to subagent forwarding rules"
+      ],
+      "consider": [
+        "changes to codex-plugin-cc state.mjs layout (we copy it)",
+        "changes to pi CLI flag contract (--session/--resume/--mode json)"
+      ],
+      "skip_if": [
+        "only UI/docs wording tweaks"
+      ]
+    }
+  },
+  "task_name": "pi-agent-cc 多 Agent 协作 Claude Code 插件",
+  "task_slug": "260427-pi-agent-cc",
+  "task_type": "development",
+  "worktree_enabled": true,
+  "created_at": "2026-04-27",
+  "authoritative_plan": ".claude/plans/codex-plugin-cc-pi-mono-distributed-kurzweil.md",
+  "tasks": [
+    {
+      "id": "p0",
+      "name": "项目脚手架 + plugin manifest + git 初始化",
+      "status": "pending",
+      "dependencies": [],
+      "context_file": "context-p0-scaffold.md",
+      "completed_at": null,
+      "notes": "必须最先完成。为其他子任务创建目录骨架和 git 仓库（供 worktree 使用）。"
+    },
+    {
+      "id": "p1",
+      "name": "Companion CLI 主入口 + 核心 lib（state/workspace/render/pi-runner/worktree）",
+      "status": "pending",
+      "dependencies": ["p0"],
+      "context_file": "context-p1-companion-core.md",
+      "completed_at": null,
+      "notes": "scripts/pi-companion.mjs + scripts/lib/{state,workspace,render,pi-runner,worktree}.mjs"
+    },
+    {
+      "id": "p2",
+      "name": "Schemas + Prompts + 编排 lib（handoff/evals/task-graph/prompts）",
+      "status": "pending",
+      "dependencies": ["p0"],
+      "context_file": "context-p2-schemas-prompts-orchestration.md",
+      "completed_at": null,
+      "notes": "schemas/*.json + prompts/*.md + scripts/lib/{handoff,evals,task-graph,prompts}.mjs"
+    },
+    {
+      "id": "p3",
+      "name": "Claude Code 集成层（subagents + commands + skill + hooks）",
+      "status": "pending",
+      "dependencies": ["p0"],
+      "context_file": "context-p3-cc-integration.md",
+      "completed_at": null,
+      "notes": "agents/*.md + commands/*.md + skills/pi-runtime/SKILL.md + hooks/hooks.json + scripts/session-lifecycle-hook.mjs"
+    },
+    {
+      "id": "p4",
+      "name": "端到端验证 + 权限 settings + README",
+      "status": "pending",
+      "dependencies": ["p1", "p2", "p3"],
+      "context_file": "context-p4-e2e-verify.md",
+      "completed_at": null,
+      "notes": "收尾：.claude/settings.json 权限配置、README.md 使用说明、demo 验证脚本。依赖前三个全部完成。"
+    }
+  ],
+  "parallelism": {
+    "groups": [
+      {"stage": 0, "tasks": ["p0"]},
+      {"stage": 1, "tasks": ["p1", "p2", "p3"], "parallel": true},
+      {"stage": 2, "tasks": ["p4"]}
+    ]
+  },
+  "reference": {
+    "codex_plugin_cc_root": "/Users/yanyao/Projects/fork/codex-plugin-cc",
+    "pi_mono_root": "/Users/yanyao/Projects/fork/pi-mono",
+    "plan_file": "/Users/yanyao/Projects/side/pi-agent-cc/.claude/plans/codex-plugin-cc-pi-mono-distributed-kurzweil.md"
+  }
+}
