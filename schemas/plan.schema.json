@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Plan",
+  "type": "object",
+  "required": ["version", "tasks"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "requirements": { "type": "string" },
+    "summary": { "type": "string" },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "description", "acceptance", "deps"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^t\\d{3,}$" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "acceptance": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1
+          },
+          "deps": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^t\\d{3,}$" }
+          },
+          "evals": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "touchedPaths": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "effort": {
+            "type": "string",
+            "enum": ["xs", "s", "m", "l", "xl"]
+          }
+        },
+        "additionalProperties": true
+      },
+      "minItems": 1
+    }
+  },
+  "additionalProperties": true
+}
