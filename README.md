@@ -141,6 +141,31 @@ Each role entry may also set `tools` (csv or `"all"`) and
 `appendSystemPrompt` (absolute path to an extra prompt file) for advanced
 customisation.
 
+### Gateways / OpenAI-compatible & Anthropic-compatible backends
+
+Register any gateway (ZenMux, OpenRouter, Portkey, a self-hosted LiteLLM, …)
+by adding a provider entry to `~/.pi/agent/models.json` and then referring
+to it from `pi-agent.config.json` as `<provider>/<model-id>`.
+
+Ready-made pairs live under [`examples/`](./examples/):
+
+| Profile | Gateway | Wire | Models | Best for |
+|---|---|---|---|---|
+| [`examples/zenmux-responses/`](./examples/zenmux-responses/) | `https://zenmux.ai/api/v1` | `openai-responses` (Codex-style) | `openai/gpt-5.5-pro` | All five roles on a single strong reasoning model |
+| [`examples/zenmux-anthropic/`](./examples/zenmux-anthropic/) | `https://zenmux.ai/api/anthropic` | `anthropic-messages` | `claude-haiku-4.5`, `claude-sonnet-4.6`, `claude-opus-4.7` | Haiku for tester, Sonnet for plan/dev, Opus for reviewer + evaluator |
+
+Install either with:
+
+```bash
+cp examples/<profile>/models.json ~/.pi/agent/models.json
+cp examples/<profile>/pi-agent.config.json ./pi-agent.config.json
+export ZENMUX_API_KEY=sk-zm-...
+node_modules/.bin/pi --list-models   # verify the gateway is visible
+```
+
+See [`examples/README.md`](./examples/README.md) for the per-role rationale
+and how to add your own profile.
+
 **Env overrides** (useful for CI or quick experiments):
 
 ```bash

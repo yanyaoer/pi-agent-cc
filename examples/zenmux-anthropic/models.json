@@ -1,0 +1,37 @@
+{
+  "$comment": "Install at ~/.pi/agent/models.json (or merge into existing). Registers ZenMux's Anthropic-compatible gateway. Requires ZENMUX_API_KEY env.",
+  "providers": {
+    "zenmux-anthropic": {
+      "baseUrl": "https://zenmux.ai/api/anthropic",
+      "api": "anthropic-messages",
+      "apiKey": "ZENMUX_API_KEY",
+      "authHeader": true,
+      "models": [
+        {
+          "id": "anthropic/claude-haiku-4.5",
+          "name": "Claude Haiku 4.5 (via ZenMux)",
+          "reasoning": true,
+          "input": ["text", "image"],
+          "contextWindow": 200000,
+          "maxTokens": 64000
+        },
+        {
+          "id": "anthropic/claude-sonnet-4.6",
+          "name": "Claude Sonnet 4.6 (via ZenMux)",
+          "reasoning": true,
+          "input": ["text", "image"],
+          "contextWindow": 1000000,
+          "maxTokens": 64000
+        },
+        {
+          "id": "anthropic/claude-opus-4.7",
+          "name": "Claude Opus 4.7 (via ZenMux)",
+          "reasoning": true,
+          "input": ["text", "image"],
+          "contextWindow": 1000000,
+          "maxTokens": 64000
+        }
+      ]
+    }
+  }
+}
