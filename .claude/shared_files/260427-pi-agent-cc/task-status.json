@@ -32,12 +32,12 @@
         "cancel"
       ],
       "files": [
-        "plugins/pi-agent/scripts/**",
-        "plugins/pi-agent/agents/*.md",
-        "plugins/pi-agent/commands/*.md",
-        "plugins/pi-agent/schemas/*.json",
-        "plugins/pi-agent/prompts/*.md",
-        "plugins/pi-agent/hooks/hooks.json",
+        "scripts/**",
+        "agents/*.md",
+        "commands/*.md",
+        "schemas/*.json",
+        "prompts/*.md",
+        "hooks/hooks.json",
         ".claude-plugin/plugin.json",
         "package.json"
       ]
@@ -77,58 +77,67 @@
   "task_slug": "260427-pi-agent-cc",
   "task_type": "development",
   "worktree_enabled": true,
+  "base_branch": "main",
   "created_at": "2026-04-27",
   "authoritative_plan": ".claude/plans/codex-plugin-cc-pi-mono-distributed-kurzweil.md",
   "tasks": [
     {
       "id": "p0",
       "name": "项目脚手架 + plugin manifest + git 初始化",
-      "status": "pending",
+      "status": "completed",
       "dependencies": [],
       "context_file": "context-p0-scaffold.md",
-      "completed_at": null,
-      "notes": "必须最先完成。为其他子任务创建目录骨架和 git 仓库（供 worktree 使用）。"
+      "completed_at": "2026-04-27",
+      "notes": "在主仓库直接完成（worktree 前置）。git init + package.json + plugin.json + 目录骨架 + CLAUDE.md/README.md / .gitignore，首 commit 已入 main。"
     },
     {
       "id": "p1",
       "name": "Companion CLI 主入口 + 核心 lib（state/workspace/render/pi-runner/worktree）",
-      "status": "pending",
+      "status": "completed",
       "dependencies": ["p0"],
       "context_file": "context-p1-companion-core.md",
-      "completed_at": null,
-      "notes": "scripts/pi-companion.mjs + scripts/lib/{state,workspace,render,pi-runner,worktree}.mjs"
+      "branch": "research/260427-pi-agent-cc/p1",
+      "worktree_path": "worktrees/p1",
+      "completed_at": "2026-04-27",
+      "notes": "scripts/pi-companion.mjs 骨架 + scripts/lib/{state,workspace,render,pi-runner,worktree}.mjs。业务 handler 留桩给 P2。交付摘要：workspace 以 basename+sha256(realpath)前16位定位 state 目录（CLAUDE_PLUGIN_DATA > XDG_DATA_HOME > ~/.claude/pi-agent）。state.mjs 提供 loadState/saveState/loadPlan/savePlan/loadTask/saveTask/listTasks/appendHistory/saveReport/loadReports/recordWorktree/clearWorktree/getSessionPath，原子写（tmp+rename）。pi-runner 导出 runPi({systemPromptPath,tools,sessionPath,resume,prompt,cwd,model,appendSystemPromptExtra,onEvent,signal,extraArgs,piBin,env}) + buildPiArgs 纯函数便于单测；JSONL 流式解析；abort 先 SIGTERM，5s 后 SIGKILL；末条 message_end 尝试 JSON.parse 并回退到末尾平衡大括号。worktree.mjs 全程 git -C <workspaceRoot>，默认分支 pi/<taskId>，冲突时 merge --abort 返回 {ok:false,conflict:true,files}。render.mjs 提供 renderStatusTable/renderStatusJson/renderFinalReport/renderStatusBanner。companion CLI 的 init 和 status 自测通过；其他 9 个子命令 throw 'to be implemented by P2'。"
     },
     {
       "id": "p2",
-      "name": "Schemas + Prompts + 编排 lib（handoff/evals/task-graph/prompts）",
-      "status": "pending",
+      "name": "Schemas + Prompts + 编排 lib + companion 业务 handler",
+      "status": "completed",
       "dependencies": ["p0"],
       "context_file": "context-p2-schemas-prompts-orchestration.md",
-      "completed_at": null,
-      "notes": "schemas/*.json + prompts/*.md + scripts/lib/{handoff,evals,task-graph,prompts}.mjs"
+      "branch": "research/260427-pi-agent-cc/p2",
+      "worktree_path": "worktrees/p2",
+      "completed_at": "2026-04-27",
+      "notes": "schemas/*.json + prompts/*.md + scripts/lib/{handoff,evals,task-graph,prompts,schema}.mjs + scripts/lib/handlers/*.mjs（填补 P1 的桩）。与 P1 按 context-common.md 契约并行开发。交付摘要：3 个 JSON Schema（draft-07，plan/test-report/eval-report，含 pattern/minItems/enum/minimum/maximum 约束）；4 个角色 prompt（planner/tester/evaluator 强制末条为 JSON，developer 只输出 markdown 摘要）；scripts/lib/schema.mjs 自研零依赖 draft-07 子集校验器 + extractLastJsonBlock（带字符串状态机，正确处理 JSON 字符串里的 `}`，支持 ```json 围栏）—— 选择手写而非 ajv 避免 P4 补依赖；scripts/lib/handoff.mjs 同时导出契约形态（buildTesterContext(taskId)/buildResumePrompt(role,taskId,issues) 动态 import state+worktree lib）和 ergonomic 形态（buildTesterContextFromInputs/buildDevResumePrompt/buildTesterResumePrompt）；task-graph.mjs 增加 findCycles/topoSort 便于 orchestrate 启动前做 DAG 校验；evals.mjs 使用 child_process.fork + IPC，per-eval timeout，exit-without-result 以 stderr tail 兜底（本地 fork 流程已自测通过：1 pass / 1 fail / 1 missing 路径都正确聚合）；10 个 handler 分文件放 scripts/lib/handlers/{plan,plan-confirm,develop,test,evaluate,orchestrate,resume,report,approve,cancel}.mjs + _shared.mjs（统一 parseArgs/writeJsonLine/loadPlan/savePlan/loadReports/saveReport），每个默认导出 async 函数签名 (argv: string[]) => void，方便 P1 的 pi-companion.mjs 动态 import 组装 HANDLERS map；所有 handler 对 P1 lib 使用 dynamic import，因此本 worktree 能独立通过静态 smoke。遗留给 P4 的联调点：(1) pi-runner.runPi 返回值里 lastMessage 的确切结构（我按 {text:string} 或直接 string 做双路径兜底），需 P1 合并后确认；(2) worktree.mergeWorktree 返回 {ok} 还是 throw on conflict，我按返回对象的 ok 字段判断；(3) orchestrate 在无 ready/ 无 in-flight 时判定 stalled 的循环，需要和 P1 的 listTasks() 性能配合（每次 saveTask 后都重新读可能偏重）；(4) 手写 schema 校验器只覆盖 draft-07 子集，若未来引入 $ref/oneOf 等需要升级到 ajv。"
     },
     {
       "id": "p3",
       "name": "Claude Code 集成层（subagents + commands + skill + hooks）",
-      "status": "pending",
+      "status": "completed",
       "dependencies": ["p0"],
       "context_file": "context-p3-cc-integration.md",
-      "completed_at": null,
-      "notes": "agents/*.md + commands/*.md + skills/pi-runtime/SKILL.md + hooks/hooks.json + scripts/session-lifecycle-hook.mjs"
+      "branch": "research/260427-pi-agent-cc/p3",
+      "worktree_path": "worktrees/p3",
+      "completed_at": "2026-04-27",
+      "notes": "agents/*.md + commands/*.md + skills/pi-runtime/SKILL.md + hooks/hooks.json + scripts/session-lifecycle-hook.mjs。纯声明式，无业务代码。已交付：4 subagents (pi-planner/developer/tester/evaluator, 全部薄转发 Bash→pi-companion.mjs)；9 commands (plan/start/resume/evaluate 走 Agent 路由 subagent；plan-confirm/status/report/approve/cancel 用 !bash-result 直出，零 LLM)；skills/pi-runtime/SKILL.md 文档化调用契约 (user-invocable: false)；hooks/hooks.json 仅 SessionStart (timeout 5s) → session-lifecycle-hook.mjs (chmod +x, companion 缺失时静默 exit 0)。allowed-tools 全部保持 Bash(node:*) 精度。自测通过：frontmatter OK、hooks.json jq 合法、hook 烟测 exit=0。"
     },
     {
       "id": "p4",
-      "name": "端到端验证 + 权限 settings + README",
+      "name": "端到端验证 + 权限 settings + 依赖补齐 + README 完善",
       "status": "pending",
       "dependencies": ["p1", "p2", "p3"],
       "context_file": "context-p4-e2e-verify.md",
+      "branch": "research/260427-pi-agent-cc/p4",
+      "worktree_path": "worktrees/p4",
       "completed_at": null,
-      "notes": "收尾：.claude/settings.json 权限配置、README.md 使用说明、demo 验证脚本。依赖前三个全部完成。"
+      "notes": "收尾：ajv 依赖、.claude/settings.json、README 扩展、demo 端到端、VERIFICATION.md。必须在 P1/P2/P3 合并后开始。"
     }
   ],
   "parallelism": {
     "groups": [
-      {"stage": 0, "tasks": ["p0"]},
+      {"stage": 0, "tasks": ["p0"], "status": "completed"},
       {"stage": 1, "tasks": ["p1", "p2", "p3"], "parallel": true},
       {"stage": 2, "tasks": ["p4"]}
     ]
