@@ -8,7 +8,6 @@
 // should write progress/errors to stderr, JSON/markdown payload to stdout.
 
 import fs from "node:fs";
-import path from "node:path";
 
 import {
   ensureStateLayout,
@@ -24,6 +23,18 @@ import {
   getStateDir,
   resolveWorkspaceRoot,
 } from "./lib/workspace.mjs";
+
+// P2 business handlers (wired in during P4).
+import planHandler from "./lib/handlers/plan.mjs";
+import planConfirmHandler from "./lib/handlers/plan-confirm.mjs";
+import developHandler from "./lib/handlers/develop.mjs";
+import testHandler from "./lib/handlers/test.mjs";
+import evaluateHandler from "./lib/handlers/evaluate.mjs";
+import orchestrateHandler from "./lib/handlers/orchestrate.mjs";
+import resumeHandler from "./lib/handlers/resume.mjs";
+import reportHandler from "./lib/handlers/report.mjs";
+import approveHandler from "./lib/handlers/approve.mjs";
+import cancelHandler from "./lib/handlers/cancel.mjs";
 
 // ---------- arg helpers ----------
 
@@ -128,26 +139,19 @@ async function handleStatus(args) {
   }
 }
 
-// Stubs — P2 fills these in.
-function notImplementedBy(p) {
-  return async () => {
-    throw new Error(`to be implemented by ${p}`);
-  };
-}
-
 const HANDLERS = {
   init: handleInit,
   status: handleStatus,
-  plan: notImplementedBy("P2"),
-  "plan-confirm": notImplementedBy("P2"),
-  develop: notImplementedBy("P2"),
-  test: notImplementedBy("P2"),
-  evaluate: notImplementedBy("P2"),
-  orchestrate: notImplementedBy("P2"),
-  resume: notImplementedBy("P2"),
-  report: notImplementedBy("P2"),
-  approve: notImplementedBy("P2"),
-  cancel: notImplementedBy("P2"),
+  plan: planHandler,
+  "plan-confirm": planConfirmHandler,
+  develop: developHandler,
+  test: testHandler,
+  evaluate: evaluateHandler,
+  orchestrate: orchestrateHandler,
+  resume: resumeHandler,
+  report: reportHandler,
+  approve: approveHandler,
+  cancel: cancelHandler,
 };
 
 function usage() {

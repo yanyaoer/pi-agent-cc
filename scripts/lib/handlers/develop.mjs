@@ -1,6 +1,5 @@
 // develop.mjs — dispatch (or resume) the developer subagent on a single task.
 
-import path from 'node:path';
 import { loadPrompt } from '../prompts.mjs';
 import { buildDevResumePrompt } from '../handoff.mjs';
 import {
