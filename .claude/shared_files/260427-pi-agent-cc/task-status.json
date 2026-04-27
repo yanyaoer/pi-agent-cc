@@ -4,7 +4,7 @@
     "id": "260427-pi-agent-cc",
     "created_at": "2026-04-27",
     "updated_at": "2026-04-27",
-    "status": "active",
+    "status": "completed",
     "scope": {
       "modules": [
         "plugin-manifest",
@@ -126,13 +126,13 @@
     {
       "id": "p4",
       "name": "端到端验证 + 权限 settings + 依赖补齐 + README 完善",
-      "status": "pending",
+      "status": "completed",
       "dependencies": ["p1", "p2", "p3"],
       "context_file": "context-p4-e2e-verify.md",
-      "branch": "research/260427-pi-agent-cc/p4",
-      "worktree_path": "worktrees/p4",
-      "completed_at": null,
-      "notes": "收尾：ajv 依赖、.claude/settings.json、README 扩展、demo 端到端、VERIFICATION.md。必须在 P1/P2/P3 合并后开始。"
+      "branch": "main",
+      "worktree_path": null,
+      "completed_at": "2026-04-27",
+      "notes": "直接在 main 分支完成（P1/P2/P3 已合并，无需 worktree）。A. pi-companion.mjs 把 9 个 P2 stub 换成对 scripts/lib/handlers/*.mjs 默认导出的直接 import（handler 签名已是 async (argv)=>void，无需参数适配）。B. 删掉 pi-companion.mjs 和 develop.mjs 的 unused `import path`。C. 新增 .claude/settings.json（项目级，入库）带 node/git/pi 白名单；.claude/settings.local.json 保留不动。D. 代码零外部 npm 依赖（P2 选手写 draft-07 schema 避免 ajv），package.json 的 dependencies 保持空，不需要 npm install。E. README 从极简版扩展到 Install / Commands 表 / 5 分钟 quickstart / ASCII 架构图 / State 布局 / Phase 2+ roadmap / 调试排错建议。F. 静态冒烟：所有 .mjs import OK，schemas/hooks/plugin.json 全部合法，session-lifecycle-hook SessionStart exit=0，companion init+status --json 跑通。G. 端到端：which pi 未装，跳过实跑，记录到 VERIFICATION.md 由用户在装 pi 的环境补。H. 写 VERIFICATION.md。提交拆成 4 个 commit：(1) fix wire handlers + drop unused imports，(2) chore settings.json，(3) docs README，(4) chore status + VERIFICATION。未 push。"
     }
   ],
   "parallelism": {
