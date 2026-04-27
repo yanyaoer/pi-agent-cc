@@ -1,0 +1,15 @@
+{
+  "$schema": "https://example.invalid/pi-agent.config.schema.json",
+  "_comment": "ZenMux via Anthropic Messages gateway (three Claude models). Copy to <workspace>/pi-agent.config.json after installing the matching models.json. Export ZENMUX_API_KEY before running. Per-role split: haiku for the read-only tester (cheap+fast), sonnet for planning/coding/review (balanced), opus for final evaluator (strongest reasoning).",
+  "defaultModel": "zenmux-anthropic/anthropic/claude-sonnet-4.6",
+  "roles": {
+    "planner":   { "model": "zenmux-anthropic/anthropic/claude-sonnet-4.6" },
+    "developer": { "model": "zenmux-anthropic/anthropic/claude-sonnet-4.6" },
+    "tester":    { "model": "zenmux-anthropic/anthropic/claude-haiku-4.5" },
+    "reviewer":  { "model": "zenmux-anthropic/anthropic/claude-opus-4.7" },
+    "evaluator": { "model": "zenmux-anthropic/anthropic/claude-opus-4.7" }
+  },
+  "orchestration": {
+    "review": { "enabled": true, "maxContextFiles": 25 }
+  }
+}

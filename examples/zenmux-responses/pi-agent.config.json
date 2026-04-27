@@ -1,0 +1,15 @@
+{
+  "$schema": "https://example.invalid/pi-agent.config.schema.json",
+  "_comment": "ZenMux via OpenAI Responses API (single strong reasoning model). Copy to <workspace>/pi-agent.config.json after installing the matching models.json. Export ZENMUX_API_KEY before running.",
+  "defaultModel": "zenmux-openai/openai/gpt-5.5-pro",
+  "roles": {
+    "planner":   { "model": "zenmux-openai/openai/gpt-5.5-pro" },
+    "developer": { "model": "zenmux-openai/openai/gpt-5.5-pro" },
+    "tester":    { "model": "zenmux-openai/openai/gpt-5.5-pro" },
+    "reviewer":  { "model": "zenmux-openai/openai/gpt-5.5-pro" },
+    "evaluator": { "model": "zenmux-openai/openai/gpt-5.5-pro" }
+  },
+  "orchestration": {
+    "review": { "enabled": true, "maxContextFiles": 25 }
+  }
+}
