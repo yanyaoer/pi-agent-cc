@@ -24,7 +24,7 @@ export default async function handlePlan(argv) {
   const { opts, positional } = parseArgs(argv);
   const text = positional.join(' ').trim();
   if (!text) {
-    throw new Error('usage: pi-companion plan "<requirement or feedback text>"');
+    throw new Error('usage: pi-agent-cc plan "<requirement or feedback text>"');
   }
 
   const stateDir = await getStateDir();

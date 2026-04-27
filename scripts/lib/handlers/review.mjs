@@ -64,7 +64,7 @@ function buildFreshPrompt({ taskId, contextPack }) {
 export default async function handleReview(argv) {
   const { opts } = parseArgs(argv);
   const taskId = opts.task || opts.taskId;
-  if (!taskId) throw new Error('usage: pi-companion review --task <id> [--resume]');
+  if (!taskId) throw new Error('usage: pi-agent-cc review --task <id> [--resume]');
   const resume = !!opts.resume;
 
   const stateDir = await getStateDir();

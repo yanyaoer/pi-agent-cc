@@ -4,7 +4,8 @@
   "description": "Claude Code plugin: multi-agent handoff orchestrator built on pi-mono.",
   "type": "module",
   "bin": {
-    "pi-companion": "./scripts/pi-companion.mjs"
+    "pi-companion": "./scripts/pi-companion.mjs",
+    "pi-agent-cc": "./scripts/pi-companion.mjs"
   },
   "scripts": {
     "postinstall": "node scripts/pi-companion.mjs init 2>/dev/null || true",

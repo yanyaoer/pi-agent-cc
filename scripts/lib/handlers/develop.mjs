@@ -18,7 +18,7 @@ import {
 export default async function handleDevelop(argv) {
   const { opts } = parseArgs(argv);
   const taskId = opts.task || opts.taskId;
-  if (!taskId) throw new Error('usage: pi-companion develop --task <id> [--resume]');
+  if (!taskId) throw new Error('usage: pi-agent-cc develop --task <id> [--resume]');
   const resume = !!opts.resume;
 
   const stateDir = await getStateDir();

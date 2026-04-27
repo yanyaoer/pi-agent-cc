@@ -8,6 +8,8 @@
 // should write progress/errors to stderr, JSON/markdown payload to stdout.
 
 import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import {
   ensureStateLayout,
@@ -140,6 +142,32 @@ async function handleStatus(args) {
   }
 }
 
+async function handleCompletion(argv) {
+  const shell = argv[0];
+  if (!shell || !["fish", "bash", "zsh"].includes(shell)) {
+    process.stderr.write(
+      `usage: pi-agent-cc completion <fish|bash|zsh>\n` +
+        `\n` +
+        `Install:\n` +
+        `  fish: pi-agent-cc completion fish > ~/.config/fish/completions/pi-agent-cc.fish\n` +
+        `  bash: pi-agent-cc completion bash > /usr/local/etc/bash_completion.d/pi-agent-cc\n` +
+        `  zsh : pi-agent-cc completion zsh  > "\${fpath[1]}/_pi-agent-cc" && compinit\n` +
+        `\n` +
+        `Or eval inline (session-scoped):\n` +
+        `  source <(pi-agent-cc completion bash)\n` +
+        `  pi-agent-cc completion fish | source\n`,
+    );
+    process.exit(2);
+  }
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  const file = path.join(here, "completion", `pi-agent-cc.${shell}`);
+  if (!fs.existsSync(file)) {
+    process.stderr.write(`completion template missing: ${file}\n`);
+    process.exit(1);
+  }
+  process.stdout.write(fs.readFileSync(file, "utf8"));
+}
+
 const HANDLERS = {
   init: handleInit,
   status: handleStatus,
@@ -154,17 +182,25 @@ const HANDLERS = {
   report: reportHandler,
   approve: approveHandler,
   cancel: cancelHandler,
+  completion: handleCompletion,
 };
 
 function usage() {
   const subcommands = Object.keys(HANDLERS).join(", ");
   return (
-    `Usage: pi-companion <subcommand> [args]\n` +
+    `Usage: pi-agent-cc <subcommand> [args]\n` +
+    `       (alias: pi-companion <subcommand> [args])\n` +
     `\n` +
     `Subcommands: ${subcommands}\n` +
     `\n` +
     `Common flags:\n` +
-    `  --json         emit machine-readable JSON (supported by init, status)\n`
+    `  --json         emit machine-readable JSON (supported by init, status, report)\n` +
+    `  --banner       status: emit a compact one-liner (silent when idle)\n` +
+    `\n` +
+    `Shell completion:\n` +
+    `  pi-agent-cc completion fish > ~/.config/fish/completions/pi-agent-cc.fish\n` +
+    `  pi-agent-cc completion bash | sudo tee /usr/local/etc/bash_completion.d/pi-agent-cc\n` +
+    `  pi-agent-cc completion zsh  > "\${fpath[1]}/_pi-agent-cc"\n`
   );
 }
 
@@ -183,7 +219,8 @@ async function main() {
     await handler(rest);
   } catch (err) {
     const message = err?.message ?? String(err);
-    process.stderr.write(`pi-companion ${subcommand}: ${message}\n`);
+    const binName = (process.argv[1] && path.basename(process.argv[1])) || "pi-agent-cc";
+    process.stderr.write(`${binName} ${subcommand}: ${message}\n`);
     if (process.env.PI_COMPANION_DEBUG) {
       process.stderr.write(`${err?.stack ?? ""}\n`);
     }

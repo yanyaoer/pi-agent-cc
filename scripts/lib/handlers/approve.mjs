@@ -11,7 +11,7 @@ export default async function handleApprove(argv) {
   const { positional } = parseArgs(argv);
   const taskId = positional[0];
   const reason = positional.slice(1).join(' ').trim();
-  if (!taskId) throw new Error('usage: pi-companion approve <taskId> <reason>');
+  if (!taskId) throw new Error('usage: pi-agent-cc approve <taskId> <reason>');
   if (!reason) throw new Error('approval reason is required');
 
   const { loadTask, saveTask, appendHistory } = await stateLib();

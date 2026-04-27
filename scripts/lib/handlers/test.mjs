@@ -22,7 +22,7 @@ import {
 export default async function handleTest(argv) {
   const { opts } = parseArgs(argv);
   const taskId = opts.task || opts.taskId;
-  if (!taskId) throw new Error('usage: pi-companion test --task <id> [--resume]');
+  if (!taskId) throw new Error('usage: pi-agent-cc test --task <id> [--resume]');
   const resume = !!opts.resume;
 
   const stateDir = await getStateDir();
