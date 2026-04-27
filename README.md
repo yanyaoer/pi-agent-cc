@@ -38,9 +38,10 @@ you can override with `PI_BIN=/path/to/pi` if needed.
 |---|---|
 | `/pi:plan <text>` | Discuss and iterate on a task plan with the planner subagent. |
 | `/pi:plan-confirm` | Freeze the current draft plan into task records. Required before `/pi:start`. |
-| `/pi:start [--parallel N]` | Start the orchestration loop. Dispatches developers into isolated worktrees, runs testers, then evaluator. |
+| `/pi:start [--parallel N] [--no-review]` | Start the orchestration loop. Dispatches developers into isolated worktrees, runs testers, then the **adversarial reviewer** (default gate; pass `--no-review` to skip), then evaluator. |
 | `/pi:status` | Show current plan and task status. |
 | `/pi:resume <taskId>` | Manually resume a developer or tester session for a specific task. |
+| `/pi:review <taskId>` | Run an adversarial reviewer pass on a task's worktree (git diff + ast-grep cross-refs). Emits a structured review-report JSON. |
 | `/pi:evaluate` | Trigger a full evaluator pass (Layer-1 eval scripts + Layer-2 LLM review). |
 | `/pi:report` | Print aggregated report (plan + test results + eval verdict). |
 | `/pi:approve <taskId> <reason>` | Force-approve a task (skip evaluator gate). Coordinator override. |
@@ -78,10 +79,38 @@ git init -b main && echo "# demo" > README.md && git add -A && git commit -m ini
 /pi:report
 ```
 
+## Adversarial reviewer (default gate)
+
+Every task goes through an adversarial reviewer **after tester PASS and
+before merge**. The reviewer tries to break confidence in the change rather
+than verify features.
+
+**Context it receives** (pre-collected by the companion):
+- `git diff <base>...HEAD` against the worktree's base branch
+- Top-level symbols touched by the diff (extracted from hunk headers and,
+  when `ast-grep` is available, via structural `ast-grep run --pattern`)
+- Cross-references for those symbols via `ast-grep` + `ripgrep` (other call
+  sites in the repo that reference what you just changed)
+
+**Tools it has**: `read`, `grep`, `find`, `ls`, `bash` — no write/edit.
+Through bash it can run `rg`, `ast-grep`, `git log -p`, and any
+LSP-backed CLI already on `PATH` (`tsc --noEmit`, `pyright`,
+`cargo check`, `go vet`, etc.) to follow the evidence.
+
+**Output** is a structured JSON `review-report` with verdict
+`approve | needs-attention` and concrete findings (file, line range,
+severity, confidence, recommendation). A `needs-attention` verdict is
+handed back to the developer as a follow-up prompt; the reviewer keeps its
+own pi session so the re-review `--resume`s with full context.
+
+Disable per-run via `/pi:start --no-review`, or globally via
+`orchestration.review.enabled: false` in `pi-agent.config.json`, or via
+`PI_AGENT_REVIEW_ENABLED=0`.
+
 ## Per-role LLM configuration
 
-Each role (planner / developer / tester / evaluator) can run on a different
-model. Configuration is resolved in this order (highest wins):
+Each role (planner / developer / tester / **reviewer** / evaluator) can run
+on a different model. Configuration is resolved in this order (highest wins):
 
 1. Explicit `--model <id>` flag on the companion subcommand
 2. Environment variable `PI_AGENT_<ROLE>_MODEL` (e.g. `PI_AGENT_EVALUATOR_MODEL`)
@@ -99,7 +128,11 @@ at your workspace root):
     "planner":   { "model": "claude-sonnet-4-6" },
     "developer": { "model": "claude-sonnet-4-6" },
     "tester":    { "model": "claude-haiku-4-5" },
+    "reviewer":  { "model": "claude-sonnet-4-6" },
     "evaluator": { "model": "claude-opus-4-7" }
+  },
+  "orchestration": {
+    "review": { "enabled": true, "maxContextFiles": 25 }
   }
 }
 ```

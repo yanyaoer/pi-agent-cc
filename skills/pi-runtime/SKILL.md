@@ -6,7 +6,7 @@ user-invocable: false
 
 # pi-runtime skill
 
-Use this skill only inside the `pi-agent:pi-planner`, `pi-agent:pi-developer`, `pi-agent:pi-tester`, and `pi-agent:pi-evaluator` subagents. It documents the expected Bash invocation contract so the forwarders stay in lockstep with the companion CLI.
+Use this skill only inside the `pi-agent:pi-planner`, `pi-agent:pi-developer`, `pi-agent:pi-tester`, `pi-agent:pi-reviewer`, and `pi-agent:pi-evaluator` subagents. It documents the expected Bash invocation contract so the forwarders stay in lockstep with the companion CLI.
 
 ## Entry point
 
@@ -23,8 +23,9 @@ Use this skill only inside the `pi-agent:pi-planner`, `pi-agent:pi-developer`, `
 | `plan-confirm` | — | `/pi:plan-confirm` (bash-result) |
 | `develop --task <id> [--resume]` | — | `pi-agent:pi-developer` |
 | `test --task <id> [--resume]` | — | `pi-agent:pi-tester` |
+| `review --task <id> [--resume]` | — | `pi-agent:pi-reviewer` |
 | `evaluate` | — | `pi-agent:pi-evaluator` |
-| `orchestrate` | `[--parallel N] [--auto-approve]` | `/pi:start` |
+| `orchestrate` | `[--parallel N] [--auto-approve] [--no-review\|--review]` | `/pi:start` |
 | `status` | `[taskId] [--json] [--banner]` | `/pi:status`, SessionStart hook |
 | `resume <taskId>` | `[--role developer\|tester]` | `/pi:resume` (routes to subagent) |
 | `report` | `[--json]` | `/pi:report` (bash-result) |
@@ -34,7 +35,7 @@ Use this skill only inside the `pi-agent:pi-planner`, `pi-agent:pi-developer`, `
 ## Stdout conventions
 
 - `init` / `plan-confirm` / `approve` / `cancel`: single JSON summary line.
-- `plan` / `develop` / `test` / `evaluate`: JSON result as the last stdout line; human-readable lines may precede it.
+- `plan` / `develop` / `test` / `review` / `evaluate`: JSON result as the last stdout line; human-readable lines may precede it.
 - `orchestrate`: streaming JSONL progress events (one event per line).
 - `status` / `report`: Markdown by default; raw JSON when `--json` is passed.
 - `status --banner`: emits a compact single-line banner only when jobs are running or pending; silent otherwise.

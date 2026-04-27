@@ -6,6 +6,13 @@
     "planner":   { "model": "claude-sonnet-4-6" },
     "developer": { "model": "claude-sonnet-4-6" },
     "tester":    { "model": "claude-haiku-4-5" },
+    "reviewer":  { "model": "claude-sonnet-4-6" },
     "evaluator": { "model": "claude-opus-4-7" }
+  },
+  "orchestration": {
+    "review": {
+      "enabled": true,
+      "maxContextFiles": 25
+    }
   }
 }
