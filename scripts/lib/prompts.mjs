@@ -9,12 +9,12 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROMPTS_DIR = path.resolve(__dirname, '..', '..', 'prompts');
 
-const KNOWN = new Set(['planner', 'developer', 'tester', 'evaluator']);
+const KNOWN = new Set(['planner', 'developer', 'tester', 'reviewer', 'evaluator']);
 
 /**
  * Return the absolute path to a role prompt markdown file.
  *
- * @param {string} name one of "planner" | "developer" | "tester" | "evaluator"
+ * @param {string} name one of "planner" | "developer" | "tester" | "reviewer" | "evaluator"
  * @returns {string} absolute path to prompts/<name>.md
  */
 export function loadPrompt(name) {
