@@ -100,6 +100,12 @@ Meta commands:
 |---|---|
 | `/confirm` | freeze the current draft plan (same as `plan-confirm`) |
 | `/status` | render the task table in-process |
+| `/start [--parallel N] [--no-review] [--auto-approve]` | run the dev→test→review→eval loop (same as `pi-agent-cc orchestrate`) |
+| `/report [--json]` | print the aggregated final report |
+| `/evaluate` | trigger one evaluator pass |
+| `/resume <taskId> [--role developer\|tester]` | manually resume a session |
+| `/approve <taskId> <reason>` | force-approve a task |
+| `/cancel [taskId]` | cancel a running task |
 | `/help` | list meta commands |
 | `/quit` · `/q` · `Ctrl-D` | exit |
 | `Ctrl-C` | cancel an in-flight turn (press twice to exit) |
